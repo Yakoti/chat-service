@@ -1,4 +1,4 @@
-package com.ridetogether.chat_service;
+package com.ridetogether.chat_service.config;
 
 
 import org.springframework.context.annotation.Configuration;

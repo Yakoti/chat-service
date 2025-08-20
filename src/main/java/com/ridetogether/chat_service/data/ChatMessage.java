@@ -1,4 +1,4 @@
-package com.ridetogether.chat_service;
+package com.ridetogether.chat_service.data;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -7,15 +7,16 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name="chat_messages")
+@Table(name = "chat_messages")
 @Data
 public class ChatMessage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(nullable = false)
-    private String sender;//senderId
+    private String sender;
     private String senderName;
+    private Long chatroomId;
 
     @Column(nullable = true, columnDefinition = "TEXT")
     @Lob
@@ -23,12 +24,9 @@ public class ChatMessage {
     @Column(nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime sentDate;
-    @Column(nullable = false)
-    private String rideId;
-
     private String fileName;
     private String fileType;
-    private Boolean  encrypted;
+    //    private Boolean  encrypted;
     private String filePath;
 
 

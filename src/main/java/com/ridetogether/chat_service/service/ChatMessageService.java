@@ -1,6 +1,8 @@
-package com.ridetogether.chat_service;
+package com.ridetogether.chat_service.service;
 
 
+import com.ridetogether.chat_service.data.ChatMessage;
+import com.ridetogether.chat_service.repo.ChatMessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,17 +17,17 @@ public class ChatMessageService {
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
-    public ChatMessage save(ChatMessage message){
+    public ChatMessage save(ChatMessage message) {
         return chatMessageRepository.save(message);
     }
 
-    public List<String> getAllRideIds() {
-        return chatMessageRepository.findDistinctRideIds();
+    public List<Long> getAllChatroomIds() {
+        return chatMessageRepository.findDistinctChatroomIds();
     }
 
 
-    public List<ChatMessage> chatHistory(String rideId) {
-        List<ChatMessage> messages = chatMessageRepository.findByRideIdOrderBySentDateAsc(rideId);
+    public List<ChatMessage> chatHistory(Long chatroomId) {
+        List<ChatMessage> messages = chatMessageRepository.findByChatroomIdOrderBySentDateAsc(chatroomId);
 
         for (ChatMessage message : messages) {
             if (message.getFileName() != null && message.getFileType() != null) {
