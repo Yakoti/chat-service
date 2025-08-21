@@ -3,11 +3,9 @@ package com.ridetogether.chat_service.data;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
-@Table(name = "chatRooms")
+@Table(name = "chat_rooms")
 @Data
 public class ChatRooms {
     @Id

@@ -20,12 +20,11 @@ public class ChatRoomsController {
 
     // GET /chat/chatrooms/{userId} → list all chatrooms user is in
     @GetMapping("/{userId}")
-    public ResponseEntity<List<String>> getUserChatrooms(@PathVariable String userId) {
-        List<String> rooms = chatRoomService.findAllByUserId(userId).stream()
-                .map(ChatRooms::getName)
-                .collect(Collectors.toList());
+    public ResponseEntity<List<ChatRooms>> getUserChatrooms(@PathVariable String userId) {
+        List<ChatRooms> rooms = chatRoomService.findAllByUserId(userId);
         return ResponseEntity.ok(rooms);
     }
+
 
     // POST /chat/chatrooms/{userId} → create a new chatroom for a user
     @PostMapping
