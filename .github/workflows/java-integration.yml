@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout chat-service repo
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
@@ -22,7 +22,7 @@ jobs:
           java-version: '21'
           cache: maven
 
-      # Clone naming-server repo so we can run it locally
+      # Clone naming-server repo
       - name: Clone naming-server repo
         run: git clone https://github.com/Yakoti/naming-server.git
 
@@ -36,14 +36,14 @@ jobs:
           cd naming-server
           ./mvnw clean install
 
-      # Run naming-server in background and save PID in root folder
+      # Run naming-server in background and save PID
       - name: Start naming-server in background
         run: |
           cd naming-server
           ./mvnw spring-boot:run &
           echo $! > ../naming-server.pid
 
-      # Wait for naming-server readiness (adjust URL/port if needed)
+      # Wait for naming-server to be ready
       - name: Wait for naming-server to be ready
         run: |
           until curl -s http://localhost:8761/actuator/health > /dev/null; do
@@ -53,24 +53,30 @@ jobs:
 
       # Make mvnw executable in chat-service
       - name: Make mvnw executable in chat-service
-        run: chmod +x ./mvnw
+        run: chmod +x chat-service/mvnw
 
-      # Run integration tests for chat-service (which depends on naming-server)
+      # Run integration tests for chat-service
       - name: Run integration tests for chat-service
-        run: ./mvnw verify
-
-      # Debug: List the entire target directory recursively to find reports
-      - name: Debug target directory structure
         run: |
-          echo "Listing target directory recursively:"
-          ls -R target || echo "target directory not found"
+          cd chat-service
+          ./mvnw verify
+
+      # Generate Surefire HTML report
+      - name: Generate Surefire HTML report
+        run: |
+          cd chat-service
+          ./mvnw surefire-report:report-only
+
+      # List generated reports for debugging
+      - name: List files in chat-service/target/site/
+        run: ls -l chat-service/target/site/
 
       # Zip test reports so artifact upload works reliably
       - name: Zip test reports
         run: |
           mkdir -p test-reports
-          if [ -f target/site/surefire-report.html ]; then
-            cp target/site/surefire-report.html test-reports/
+          if [ -f chat-service/target/site/surefire-report.html ]; then
+            cp chat-service/target/site/surefire-report.html test-reports/
           else
             echo "Surefire HTML report not found, skipping copy."
           fi
@@ -88,7 +94,7 @@ jobs:
           name: chat-service-test-reports
           path: test-reports.zip
 
-      # Stop naming-server after tests, safely check if PID file exists
+      # Stop naming-server after tests
       - name: Stop naming-server
         run: |
           if [ -f naming-server.pid ]; then
