@@ -68,8 +68,8 @@ jobs:
         if: always()
         run: |
           mkdir -p test-reports
-          if [ -f target/site/surefire-report.html ]; then
-            cp target/site/surefire-report.html test-reports/
+          if [ -d target/site ]; then
+            cp -r target/site/* test-reports/
           fi
           zip -r test-reports.zip test-reports || echo "No reports to zip"
 
