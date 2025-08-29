@@ -2,19 +2,26 @@ name: Integration Tests
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - svetlioTests
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+      - svetlioTests
   workflow_dispatch:
+
 
 jobs:
   integration-test:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout chat-service repo
       - name: Checkout chat-service repo
         uses: actions/checkout@v4
 
+      # Set up Java 21
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
@@ -22,28 +29,26 @@ jobs:
           java-version: '21'
           cache: maven
 
-      # Clone naming-server repo so we can run it locally
+      # Clone naming-server repo
       - name: Clone naming-server repo
         run: git clone https://github.com/Yakoti/naming-server.git
 
-      # Make mvnw executable in naming-server
       - name: Make mvnw executable in naming-server
         run: chmod +x naming-server/mvnw
 
-      # Build naming-server
       - name: Build naming-server
         run: |
           cd naming-server
           ./mvnw clean install
 
-      # Run naming-server in background and save PID in root folder
+      # Run naming-server in background
       - name: Start naming-server in background
         run: |
           cd naming-server
           ./mvnw spring-boot:run &
           echo $! > ../naming-server.pid
 
-      # Wait for naming-server readiness (adjust URL/port if needed)
+      # Wait until naming-server is ready
       - name: Wait for naming-server to be ready
         run: |
           until curl -s http://localhost:8761/actuator/health > /dev/null; do
@@ -55,44 +60,34 @@ jobs:
       - name: Make mvnw executable in chat-service
         run: chmod +x ./mvnw
 
-        # Run integration tests for chat-service (which depends on naming-server)
+      # Run integration tests for chat-service
       - name: Run integration tests for chat-service
         run: ./mvnw verify
 
-       # Generate Surefire HTML report
+      # Generate Surefire HTML report (needs plugin in pom.xml)
       - name: Generate Surefire HTML report
         run: ./mvnw surefire-report:report-only
 
-      # List generated reports for debugging
-      - name: List files in target/site/
-        run: ls -l target/site/
-
-      # Zip test reports so artifact upload works reliably
+      # Zip and collect test reports
       - name: Zip test reports
         run: |
           mkdir -p test-reports
           if [ -f target/site/surefire-report.html ]; then
             cp target/site/surefire-report.html test-reports/
-          else
-            echo "Surefire HTML report not found, skipping copy."
           fi
-
-          if [ "$(ls -A test-reports)" ]; then
-            zip -r test-reports.zip test-reports
-          else
-            echo "No test reports to zip."
+          if [ -d target/surefire-reports ]; then
+            cp -r target/surefire-reports test-reports/
           fi
+          zip -r test-reports.zip test-reports
 
-
-      # Upload zipped test reports artifact
+      # Upload test reports as artifact
       - name: Upload test reports
         uses: actions/upload-artifact@v4
         with:
           name: chat-service-test-reports
           path: test-reports.zip
 
-
-      # Stop naming-server after tests, safely check if PID file exists
+      # Stop naming-server
       - name: Stop naming-server
         run: |
           if [ -f naming-server.pid ]; then
