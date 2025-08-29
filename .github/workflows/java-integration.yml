@@ -1,0 +1,50 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout chat-service repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # Clone naming-server repo so we can run it locally
+      - name: Clone naming-server repo
+        run: git clone https://github.com/Yakoti/naming-server.git
+
+      # Build naming-server (adjust as needed)
+      - name: Build naming-server
+        run: |
+          cd naming-server
+          ./mvnw clean install
+
+      # Run naming-server in background
+      - name: Start naming-server
+        run: |
+          cd naming-server
+          ./mvnw spring-boot:run &
+          echo $! > naming-server.pid
+          # wait for naming-server to start listening (adjust this)
+          sleep 30
+
+      # Run integration tests for chat-service (which depends on naming-server)
+      - name: Run integration tests for chat-service
+        run: ./mvnw verify
+
+      # Stop naming-server after tests
+      - name: Stop naming-server
+        run: |
+          kill $(cat naming-server.pid)
