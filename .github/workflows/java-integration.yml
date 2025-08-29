@@ -55,14 +55,17 @@ jobs:
       - name: Make mvnw executable in chat-service
         run: chmod +x ./mvnw
 
-           # Run integration tests for chat-service (which depends on naming-server)
+        # Run integration tests for chat-service (which depends on naming-server)
       - name: Run integration tests for chat-service
         run: ./mvnw verify
 
-      # Generate Surefire HTML report
+       # Generate Surefire HTML report
       - name: Generate Surefire HTML report
         run: ./mvnw surefire-report:report-only
 
+      # List generated reports for debugging
+      - name: List files in target/site/
+        run: ls -l target/site/
 
       # Zip test reports so artifact upload works reliably
       - name: Zip test reports
@@ -70,12 +73,16 @@ jobs:
           mkdir -p test-reports
           if [ -f target/site/surefire-report.html ]; then
             cp target/site/surefire-report.html test-reports/
-          fi
-          if [ -d test-reports ]; then
-            zip -r test-reports.zip test-reports || echo "No test reports to zip"
           else
-            echo "No test reports found to zip"
+            echo "Surefire HTML report not found, skipping copy."
           fi
+
+          if [ "$(ls -A test-reports)" ]; then
+            zip -r test-reports.zip test-reports
+          else
+            echo "No test reports to zip."
+          fi
+
 
       # Upload zipped test reports artifact
       - name: Upload test reports
