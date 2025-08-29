@@ -20,6 +20,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+          cache: maven
 
       # Clone naming-server repo so we can run it locally
       - name: Clone naming-server repo
@@ -29,19 +30,26 @@ jobs:
       - name: Make mvnw executable in naming-server
         run: chmod +x naming-server/mvnw
 
-      # Build naming-server (adjust as needed)
+      # Build naming-server
       - name: Build naming-server
         run: |
           cd naming-server
           ./mvnw clean install
 
       # Run naming-server in background
-      - name: Start naming-server
+      - name: Start naming-server in background
         run: |
           cd naming-server
           ./mvnw spring-boot:run &
           echo $! > naming-server.pid
-          sleep 30
+
+      # Wait for naming-server readiness (adjust URL/port if needed)
+      - name: Wait for naming-server to be ready
+        run: |
+          until curl -s http://localhost:8761/actuator/health > /dev/null; do
+            echo "Waiting for naming-server to start..."
+            sleep 5
+          done
 
       # Make mvnw executable in chat-service
       - name: Make mvnw executable in chat-service
@@ -50,6 +58,13 @@ jobs:
       # Run integration tests for chat-service (which depends on naming-server)
       - name: Run integration tests for chat-service
         run: ./mvnw verify
+
+      # Upload test reports as artifacts
+      - name: Upload test reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: chat-service-test-reports
+          path: target/surefire-reports/**/*.html
 
       # Stop naming-server after tests
       - name: Stop naming-server
