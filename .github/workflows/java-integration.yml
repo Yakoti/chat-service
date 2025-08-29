@@ -36,12 +36,12 @@ jobs:
           cd naming-server
           ./mvnw clean install
 
-      # Run naming-server in background
+      # Run naming-server in background and save PID in root folder
       - name: Start naming-server in background
         run: |
           cd naming-server
           ./mvnw spring-boot:run &
-          echo $! > naming-server.pid
+          echo $! > ../naming-server.pid
 
       # Wait for naming-server readiness (adjust URL/port if needed)
       - name: Wait for naming-server to be ready
@@ -68,6 +68,11 @@ jobs:
             target/surefire-reports/**/*.html
             target/failsafe-reports/**/*.html
 
-      # Stop naming-server after tests
+      # Stop naming-server after tests, safely check if PID file exists
       - name: Stop naming-server
-        run: kill $(cat naming-server.pid)
+        run: |
+          if [ -f naming-server.pid ]; then
+            kill $(cat naming-server.pid) || echo "Failed to kill naming-server process"
+          else
+            echo "naming-server.pid not found, skipping kill"
+          fi
