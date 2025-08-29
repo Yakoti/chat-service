@@ -25,6 +25,10 @@ jobs:
       - name: Clone naming-server repo
         run: git clone https://github.com/Yakoti/naming-server.git
 
+      # Make mvnw executable in naming-server
+      - name: Make mvnw executable in naming-server
+        run: chmod +x naming-server/mvnw
+
       # Build naming-server (adjust as needed)
       - name: Build naming-server
         run: |
@@ -37,8 +41,11 @@ jobs:
           cd naming-server
           ./mvnw spring-boot:run &
           echo $! > naming-server.pid
-          # wait for naming-server to start listening (adjust this)
           sleep 30
+
+      # Make mvnw executable in chat-service
+      - name: Make mvnw executable in chat-service
+        run: chmod +x ./mvnw
 
       # Run integration tests for chat-service (which depends on naming-server)
       - name: Run integration tests for chat-service
@@ -46,5 +53,4 @@ jobs:
 
       # Stop naming-server after tests
       - name: Stop naming-server
-        run: |
-          kill $(cat naming-server.pid)
+        run: kill $(cat naming-server.pid)
