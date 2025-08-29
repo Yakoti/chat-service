@@ -55,17 +55,15 @@ jobs:
       - name: Make mvnw executable in chat-service
         run: chmod +x ./mvnw
 
-        # Run integration tests for chat-service (which depends on naming-server)
+      # Run integration tests for chat-service (which depends on naming-server)
       - name: Run integration tests for chat-service
         run: ./mvnw verify
 
-       # Generate Surefire HTML report
-      - name: Generate Surefire HTML report
-        run: ./mvnw surefire-report:report-only
-
-      # List generated reports for debugging
-      - name: List files in target/site/
-        run: ls -l target/site/
+      # Debug: List the entire target directory recursively to find reports
+      - name: Debug target directory structure
+        run: |
+          echo "Listing target directory recursively:"
+          ls -R target || echo "target directory not found"
 
       # Zip test reports so artifact upload works reliably
       - name: Zip test reports
@@ -83,14 +81,12 @@ jobs:
             echo "No test reports to zip."
           fi
 
-
       # Upload zipped test reports artifact
       - name: Upload test reports
         uses: actions/upload-artifact@v4
         with:
           name: chat-service-test-reports
           path: test-reports.zip
-
 
       # Stop naming-server after tests, safely check if PID file exists
       - name: Stop naming-server
