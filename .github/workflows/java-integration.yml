@@ -51,32 +51,28 @@ jobs:
             sleep 5
           done
 
-      # Make mvnw executable in chat-service
-      - name: Make mvnw executable in chat-service
-        run: chmod +x chat-service/mvnw
+      # Make mvnw executable in chat-service (repo root)
+      - name: Make mvnw executable
+        run: chmod +x mvnw
 
       # Run integration tests for chat-service
-      - name: Run integration tests for chat-service
-        run: |
-          cd chat-service
-          ./mvnw verify
+      - name: Run integration tests
+        run: ./mvnw verify
 
       # Generate Surefire HTML report
       - name: Generate Surefire HTML report
-        run: |
-          cd chat-service
-          ./mvnw surefire-report:report-only
+        run: ./mvnw surefire-report:report-only
 
       # List generated reports for debugging
-      - name: List files in chat-service/target/site/
-        run: ls -l chat-service/target/site/
+      - name: List files in target/site/
+        run: ls -l target/site/
 
       # Zip test reports so artifact upload works reliably
       - name: Zip test reports
         run: |
           mkdir -p test-reports
-          if [ -f chat-service/target/site/surefire-report.html ]; then
-            cp chat-service/target/site/surefire-report.html test-reports/
+          if [ -f target/site/surefire-report.html ]; then
+            cp target/site/surefire-report.html test-reports/
           else
             echo "Surefire HTML report not found, skipping copy."
           fi
@@ -102,3 +98,4 @@ jobs:
           else
             echo "naming-server.pid not found, skipping kill"
           fi
+
