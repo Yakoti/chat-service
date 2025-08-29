@@ -63,9 +63,6 @@ jobs:
       - name: Generate Surefire HTML report
         run: ./mvnw surefire-report:report-only
 
-      # Generate Failsafe HTML report
-      - name: Generate Failsafe HTML report
-        run: ./mvnw failsafe-report:report-only
 
       # Zip test reports so artifact upload works reliably
       - name: Zip test reports
@@ -73,9 +70,6 @@ jobs:
           mkdir -p test-reports
           if [ -f target/site/surefire-report.html ]; then
             cp target/site/surefire-report.html test-reports/
-          fi
-          if [ -f target/site/failsafe-report.html ]; then
-            cp target/site/failsafe-report.html test-reports/
           fi
           if [ -d test-reports ]; then
             zip -r test-reports.zip test-reports || echo "No test reports to zip"
