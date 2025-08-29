@@ -26,24 +26,20 @@ jobs:
       - name: Clone naming-server repo
         run: git clone https://github.com/Yakoti/naming-server.git
 
-      # Make mvnw executable in naming-server
       - name: Make mvnw executable in naming-server
         run: chmod +x naming-server/mvnw
 
-      # Build naming-server
       - name: Build naming-server
         run: |
           cd naming-server
           ./mvnw clean install
 
-      # Run naming-server in background and save PID
       - name: Start naming-server in background
         run: |
           cd naming-server
           ./mvnw spring-boot:run &
           echo $! > ../naming-server.pid
 
-      # Wait for naming-server to be ready
       - name: Wait for naming-server to be ready
         run: |
           until curl -s http://localhost:8761/actuator/health > /dev/null; do
@@ -59,43 +55,36 @@ jobs:
       - name: Run integration tests
         run: ./mvnw verify
 
-      # Generate Surefire HTML report
+      # ✅ Always generate report (even if tests failed)
       - name: Generate Surefire HTML report
-        run: ./mvnw surefire-report:report-only
+        if: always()
+        run: ./mvnw surefire-report:report-only -DskipTests
 
-      # List generated reports for debugging
-      - name: List files in target/site/
-        run: ls -l target/site/
+      - name: List generated reports
+        if: always()
+        run: ls -l target/site/ || echo "No site folder found"
 
-      # Zip test reports so artifact upload works reliably
       - name: Zip test reports
+        if: always()
         run: |
           mkdir -p test-reports
           if [ -f target/site/surefire-report.html ]; then
             cp target/site/surefire-report.html test-reports/
-          else
-            echo "Surefire HTML report not found, skipping copy."
           fi
+          zip -r test-reports.zip test-reports || echo "No reports to zip"
 
-          if [ "$(ls -A test-reports)" ]; then
-            zip -r test-reports.zip test-reports
-          else
-            echo "No test reports to zip."
-          fi
-
-      # Upload zipped test reports artifact
       - name: Upload test reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: chat-service-test-reports
           path: test-reports.zip
 
-      # Stop naming-server after tests
       - name: Stop naming-server
+        if: always()
         run: |
           if [ -f naming-server.pid ]; then
             kill $(cat naming-server.pid) || echo "Failed to kill naming-server process"
           else
             echo "naming-server.pid not found, skipping kill"
           fi
-
