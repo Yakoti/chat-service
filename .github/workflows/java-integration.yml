@@ -71,7 +71,8 @@ jobs:
           if [ -d target/site ]; then
             cp -r target/site/* test-reports/
           fi
-          zip -r test-reports.zip test-reports || echo "No reports to zip"
+          # Zip contents of test-reports, not the folder itself
+          zip -r test-reports.zip test-reports/* || echo "No reports to zip"
 
       - name: Upload test reports
         if: always()
@@ -92,7 +93,7 @@ jobs:
                    {
                      \"title\": \"Workflow: ${{ github.workflow }}\",
                      \"url\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\",
-                     \"color\": 3066993,
+                     \"color \": 3066993,
                      \"fields\": [
                        {\"name\": \"Status\", \"value\": \"${{ job.status }}\", \"inline\": true},
                        {\"name\": \"Branch\", \"value\": \"${{ github.ref_name }}\", \"inline\": true},
@@ -111,4 +112,3 @@ jobs:
             kill $(cat naming-server.pid) || echo "Failed to kill naming-server process"
           else
             echo "naming-server.pid not found, skipping kill"
-          fi
