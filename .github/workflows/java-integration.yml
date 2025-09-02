@@ -112,3 +112,4 @@ jobs:
             kill $(cat naming-server.pid) || echo "Failed to kill naming-server process"
           else
             echo "naming-server.pid not found, skipping kill"
+          fi
