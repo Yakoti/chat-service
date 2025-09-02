@@ -80,6 +80,30 @@ jobs:
           name: chat-service-test-reports
           path: test-reports.zip
 
+      # Notify Discord
+      - name: Notify Discord
+        if: always()  # run even if previous steps fail
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "{
+                 \"content\": \"**Integration Tests Completed**\",
+                 \"embeds\": [
+                   {
+                     \"title\": \"Workflow: ${{ github.workflow }}\",
+                     \"url\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\",
+                     \"color\": 3066993,
+                     \"fields\": [
+                       {\"name\": \"Status\", \"value\": \"${{ job.status }}\", \"inline\": true},
+                       {\"name\": \"Branch\", \"value\": \"${{ github.ref_name }}\", \"inline\": true},
+                       {\"name\": \"Commit\", \"value\": \"[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})\", \"inline\": false},
+                       {\"name\": \"Actor\", \"value\": \"${{ github.actor }}\", \"inline\": true}
+                     ]
+                   }
+                 ]
+               }" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
+
       - name: Stop naming-server
         if: always()
         run: |
