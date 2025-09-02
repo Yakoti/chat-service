@@ -70,10 +70,11 @@ jobs:
           mkdir -p test-reports
           if [ -d target/site ]; then
             cp -r target/site/* test-reports/
-          fi
-          # Zip only the contents of test-reports (not the folder itself)
-          cd test-reports
-          zip -r ../test-reports.zip ./* || echo "No reports to zip"
+            fi
+            cd test-reports
+            zip -r ../test-reports.zip . || echo "No reports to zip"
+
+
 
       - name: Upload test reports
         if: always()
