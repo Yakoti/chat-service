@@ -20,7 +20,7 @@ public class ChatRooms {
     private String joinedUsers;
 
     @Column(nullable = false)
-    private String pending;
+    private String pendingUsers;
 
     private String routeLink;
 

@@ -4,15 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatRoomCreateRequest {
-    private List<Long> membersIds;
+    private Map<Long,String> pendingUsersIdsUsernames; // userId, username
     private Long creatorId;
-    private String joinedUsers;
-    private String pending;
+    private String creatorName;
     private String routeLink;
 }
