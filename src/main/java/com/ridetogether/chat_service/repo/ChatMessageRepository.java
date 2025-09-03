@@ -14,5 +14,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     @Query("SELECT DISTINCT c.chatroomId FROM ChatMessage c")
     List<Long> findDistinctChatroomIds();
 
+    void deleteByChatroomId(Long chatroomId);
+
 }
 

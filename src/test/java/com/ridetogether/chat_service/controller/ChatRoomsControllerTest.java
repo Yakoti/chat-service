@@ -33,45 +33,49 @@ class ChatRoomsControllerIntegrationTest {
     @Autowired
     private ChatRoomsUsersRepository chatRoomsUsersRepository;
 
-
     private ChatRooms room1;
     private ChatRooms room2;
 
     @BeforeEach
     void setup() {
-        // 1️⃣ Clear dependent data first
+        // Clear dependent data first
         chatMessagesRepository.deleteAll();
         chatRoomsUsersRepository.deleteAll();
         chatRoomsRepository.deleteAll();
 
-        // 2️⃣ Create chat rooms
-        room1 = chatRoomsRepository.save(new ChatRooms(null, "Room 1", "room-1"));
-        room2 = chatRoomsRepository.save(new ChatRooms(null, "Room 2", "room-2"));
+        // Create chat rooms using all required fields
+        room1 = chatRoomsRepository.save(
+                new ChatRooms(null, "42", "pending1", "room-1")
+        );
+        room2 = chatRoomsRepository.save(
+                new ChatRooms(null, "42", "pending2", "room-2")
+        );
 
-        // 3️⃣ Link rooms to test user (userId = 42)
-        chatRoomsUsersRepository.save(new ChatRoomsUsers(room1.getId(), 42L));
-        chatRoomsUsersRepository.save(new ChatRoomsUsers(room2.getId(), 42L));
+        // Link rooms to test user (userId = 42), with joined status
+        chatRoomsUsersRepository.save(new ChatRoomsUsers(room1.getId(), 42L, true));
+        chatRoomsUsersRepository.save(new ChatRoomsUsers(room2.getId(), 42L, true));
     }
 
     @Test
     void getUserChatrooms_ReturnsRooms() {
-        // GET all chat rooms (assuming your endpoint returns all rooms)
         ResponseEntity<ChatRooms[]> response = restTemplate.getForEntity("/chat/chatrooms/42", ChatRooms[].class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<ChatRooms> rooms = Arrays.asList(response.getBody());
 
-        assertThat(rooms).hasSize(2);
-        assertThat(rooms.get(0).getName()).isEqualTo("Room 1");
-        assertThat(rooms.get(1).getRouteLink()).isEqualTo("room-2");
+        assertThat(rooms.size()).isEqualTo(2);
+        assertThat(rooms.stream().anyMatch(r -> r.getJoinedUsers().equals("42"))).isTrue();
+        assertThat(rooms.stream().anyMatch(r -> r.getRouteLink().equals("room-2"))).isTrue();
     }
 
     @Test
     void createRoom_ReturnsCreatedRoom() {
         ChatRoomCreateRequest request = new ChatRoomCreateRequest(
-                Arrays.asList(1L, 2L), // user IDs
-                "New Room",
-                "new-room"
+                Arrays.asList(1L, 2L),    // membersIds
+                99L,                      // creatorId
+                "99",                     // joinedUsers
+                "pending3",               // pending
+                "new-room"                // routeLink
         );
 
         HttpHeaders headers = new HttpHeaders();
@@ -84,12 +88,12 @@ class ChatRoomsControllerIntegrationTest {
 
         ChatRooms room = response.getBody();
         assertThat(room).isNotNull();
-        assertThat(room.getName()).isEqualTo("New Room");
+        assertThat(room.getJoinedUsers()).isEqualTo("99");
+        assertThat(room.getPending()).isEqualTo("pending3");
         assertThat(room.getRouteLink()).isEqualTo("new-room");
 
-        // Optionally check that the room is saved in the database
         ChatRooms savedRoom = chatRoomsRepository.findById(room.getId()).orElse(null);
         assertThat(savedRoom).isNotNull();
-        assertThat(savedRoom.getName()).isEqualTo("New Room");
+        assertThat(savedRoom.getJoinedUsers()).isEqualTo("99");
     }
 }

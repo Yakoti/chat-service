@@ -16,8 +16,11 @@ public class ChatRooms {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false,unique = true)
-    private String name;
+    @Column(nullable = false)
+    private String joinedUsers;
+
+    @Column(nullable = false)
+    private String pending;
 
     private String routeLink;
 

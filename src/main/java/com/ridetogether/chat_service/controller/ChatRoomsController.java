@@ -32,5 +32,11 @@ public class ChatRoomsController {
         ChatRooms createdRoom = chatRoomService.createRoom(body);
         return ResponseEntity.ok(createdRoom);
     }
+
+    @DeleteMapping("/{chatRoomId}/users/{userId}/leave")
+    public ResponseEntity<Void> leaveRoom(@PathVariable long chatRoomId, @PathVariable long userId) {
+        chatRoomService.leaveRoom(chatRoomId, userId);
+        return ResponseEntity.noContent().build();
+    }
 }
 

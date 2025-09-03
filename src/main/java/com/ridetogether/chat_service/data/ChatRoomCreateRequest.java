@@ -10,7 +10,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatRoomCreateRequest {
-    private List<Long> userIds;
-    private String name;
+    private List<Long> membersIds;
+    private Long creatorId;
+    private String joinedUsers;
+    private String pending;
     private String routeLink;
 }
