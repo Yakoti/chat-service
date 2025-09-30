@@ -2,13 +2,9 @@ package com.ridetogether.chat_service.service;
 
 import com.ridetogether.chat_service.data.ChatRooms;
 import com.ridetogether.chat_service.data.ChatRoomsUsers;
-import com.ridetogether.chat_service.data.EmailRequest;
 import com.ridetogether.chat_service.dto.UserDto;
-import com.ridetogether.chat_service.proxy.EmailServiceProxy;
-import com.ridetogether.chat_service.proxy.UserServiceProxy;
+import com.ridetogether.email_service.service.EmailService;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,16 +12,15 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ChatRoomManager {
+public class ChatRoomManager3 {
 
     private final ChatRoomService chatRoomService;
-    private final UserServiceProxy userProxy;
-    private final EmailServiceProxy emailProxy;
+    private final UserClient userClient;
+    private final EmailService emailService;
 
 
     @Value("${frontend.chat.url}")
     private String frontendChatUrl;
-    private static final Logger logger = LoggerFactory.getLogger(EmailServiceProxy.class);
 
     /**
      * Notify all pending users of a newly created chat room via email.
@@ -42,7 +37,7 @@ public class ChatRoomManager {
 
         for (ChatRoomsUsers pendingUser : pendingUsers) {
 
-            UserDto userDto = userProxy.getUserById(pendingUser.getUserId());
+            UserDto userDto = userClient.getUserById(pendingUser.getUserId());
             if (userDto != null) {
 
                 List<String> otherPending = pendingUsers.stream()
@@ -58,19 +53,13 @@ public class ChatRoomManager {
                     emailBody.append("Other pending invitations: ").append(String.join(", ", otherPending)).append("\n");
                 }
                 emailBody.append("\nClick here to join the chat: ").append(frontendChatUrl);
-                EmailRequest request = new EmailRequest(
+
+                // Send email
+                emailService.sendEmail(
                         userDto.getEmail(),
                         "You are invited to a chat room",
                         emailBody.toString()
                 );
-                logger.info("Created request: {}", request.toString());
-                // Send email
-                try{
-                    emailProxy.sendEmail(request);
-                } catch(Exception e) {
-                    logger.error("KO stana e...");
-                    e.printStackTrace();
-                }
             }
         }
     }
