@@ -3,6 +3,7 @@ package com.ridetogether.chat_service.controller;
 import com.ridetogether.chat_service.data.ChatRoomCreateRequest;
 import com.ridetogether.chat_service.data.ChatRooms;
 import com.ridetogether.chat_service.repo.ChatRoomsRepository;
+import com.ridetogether.chat_service.service.ChatRoomManager;
 import com.ridetogether.chat_service.service.ChatRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,9 @@ public class ChatRoomsController {
     @Autowired
     private ChatRoomService chatRoomService;
 
+    @Autowired
+    private ChatRoomManager chatRoomManager;
+
     // GET /chat/chatrooms/{userId} → list all chatrooms user is in
     @GetMapping("/{userId}")
     public ResponseEntity<List<ChatRooms>> getUserChatrooms(@PathVariable String userId) {
@@ -30,6 +34,8 @@ public class ChatRoomsController {
     @PostMapping
     public ResponseEntity<?> createRoom(@RequestBody ChatRoomCreateRequest body) {
         ChatRooms createdRoom = chatRoomService.createRoom(body);
+
+        chatRoomManager.notifyPendingUsers(createdRoom);
         return ResponseEntity.ok(createdRoom);
     }
 

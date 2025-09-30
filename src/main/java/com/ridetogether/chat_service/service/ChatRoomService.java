@@ -60,6 +60,19 @@ public class ChatRoomService {
     }
 
 
+    public List<ChatRoomsUsers> getPendingUsers(Long chatRoomId) {
+        // Fetch users where joined = false
+        return chatRoomsUsersRepository.findByChatRoomIdAndJoinedFalse(chatRoomId);
+    }
+
+    public List<ChatRoomsUsers> getJoinedUsers(Long chatRoomId) {
+        // Fetch users where joined = true
+        List<ChatRoomsUsers> allUsers = chatRoomsUsersRepository.findByChatRoomId(chatRoomId);
+        return allUsers.stream()
+                .filter(ChatRoomsUsers::isJoined)
+                .toList();
+    }
+
     @Transactional
     @Scheduled(cron = "0 0 15 * * *")
     public void cleanupEmptyRooms() {

@@ -15,7 +15,7 @@ public interface ChatRoomsUsersRepository extends JpaRepository<ChatRoomsUsers, 
     long countByChatRoomId(Long chatRoomId);
     void deleteByChatRoomId(Long chatRoomId);
     void deleteByUserId(Long userId);
-
+    List<ChatRoomsUsers> findByChatRoomIdAndJoinedFalse(Long chatRoomId);
     Optional<ChatRoomsUsers> findByChatRoomIdAndUserId(Long chatRoomId, Long userId);
 
     @Modifying
