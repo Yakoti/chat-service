@@ -22,24 +22,42 @@ jobs:
           java-version: '21'
           cache: maven
 
+      # Clone emailservice repo
+      - name: Clone emailservice repo
+        run: git clone https://github.com/tatcheff03/email-service.git emailservice
+
+      # Make mvnw executable in emailservice
+      - name: Make mvnw executable in emailservice
+        run: chmod +x emailservice/mvnw
+
+      # Build & install emailservice into local Maven repo
+      - name: Build and install emailservice
+        run: |
+          cd emailservice
+          ./mvnw clean install
+
       # Clone naming-server repo
       - name: Clone naming-server repo
         run: git clone https://github.com/Yakoti/naming-server.git
 
+      # Make mvnw executable in naming-server
       - name: Make mvnw executable in naming-server
         run: chmod +x naming-server/mvnw
 
+      # Build naming-server
       - name: Build naming-server
         run: |
           cd naming-server
           ./mvnw clean install
 
+      # Start naming-server in background
       - name: Start naming-server in background
         run: |
           cd naming-server
           ./mvnw spring-boot:run &
           echo $! > ../naming-server.pid
 
+      # Wait for naming-server to be ready
       - name: Wait for naming-server to be ready
         run: |
           until curl -s http://localhost:8761/actuator/health > /dev/null; do
@@ -70,11 +88,9 @@ jobs:
           mkdir -p test-reports
           if [ -d target/site ]; then
             cp -r target/site/* test-reports/
-            fi
-            cd test-reports
-            zip -r ../test-reports.zip . || echo "No reports to zip"
-
-
+          fi
+          cd test-reports
+          zip -r ../test-reports.zip . || echo "No reports to zip"
 
       - name: Upload test reports
         if: always()
