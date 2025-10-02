@@ -1,4 +1,6 @@
 package com.ridetogether.chat_service.service;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,28 +39,50 @@ public class ChatRoomService {
 
     public ChatRooms createRoom(ChatRoomCreateRequest request) {
         ChatRooms room = new ChatRooms();
+
+
         room.setJoinedUsers(request.getCreatorName());
 
-        // Join pending usernames with comma (no trailing space before commas)
-        String pendingMembers = String.join(",", request.getPendingUsersIdsUsernames().values());
+        // Remove creator from pending users
+        Map<Long, String> pendingUsersMap = new HashMap<>(request.getPendingUsersIdsUsernames());
+        pendingUsersMap.values().removeIf(name -> name.equals(request.getCreatorName()));
+
+        String pendingMembers = String.join(",", pendingUsersMap.values());
         room.setPendingUsers(pendingMembers);
+
         room.setRouteLink(request.getRouteLink());
+
 
         room = chatRoomsRepository.save(room);
 
-        // Save pending users with their usernames and joined = false
-        for (Map.Entry<Long, String> entry : request.getPendingUsersIdsUsernames().entrySet()) {
+
+        for (Map.Entry<Long, String> entry : pendingUsersMap.entrySet()) {
             Long userId = entry.getKey();
             String name = entry.getValue();
             chatRoomsUsersRepository.save(new ChatRoomsUsers(room.getId(), userId, name, false));
         }
 
-        // Save creator with joined = true and their username
-        chatRoomsUsersRepository.save(new ChatRoomsUsers(room.getId(), request.getCreatorId(), request.getCreatorName(), true));
+
+        chatRoomsUsersRepository.save(
+                new ChatRoomsUsers(room.getId(), request.getCreatorId(), request.getCreatorName(), true)
+        );
 
         return room;
     }
 
+
+    public List<ChatRoomsUsers> getPendingUsers(Long chatRoomId) {
+        // Fetch users where joined = false
+        return chatRoomsUsersRepository.findByChatRoomIdAndJoinedFalse(chatRoomId);
+    }
+
+    public List<ChatRoomsUsers> getJoinedUsers(Long chatRoomId) {
+        // Fetch users where joined = true
+        List<ChatRoomsUsers> allUsers = chatRoomsUsersRepository.findByChatRoomId(chatRoomId);
+        return allUsers.stream()
+                .filter(ChatRoomsUsers::isJoined)
+                .toList();
+    }
 
     @Transactional
     @Scheduled(cron = "0 0 15 * * *")
@@ -83,7 +107,7 @@ public class ChatRoomService {
 
     }
 
-     void updateChatRoomJoinedPending(Long chatRoomId) {
+    void updateChatRoomJoinedPending(Long chatRoomId) {
         ChatRooms room = chatRoomsRepository.findById(chatRoomId).orElseThrow(() -> new RuntimeException("Chat room not found"));
 
         List<ChatRoomsUsers> users = chatRoomsUsersRepository.findByChatRoomId(chatRoomId);
