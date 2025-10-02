@@ -31,3 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
+src/main/java/com/ridetogether/chat_service/service/ChatRoomManager3.java
